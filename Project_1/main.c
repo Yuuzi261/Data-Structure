@@ -49,7 +49,7 @@ int main(void) {
         showModesList();
         printf("\nSelect the mode: ");
         scanf("%d", &mode);
-        if(mode == 1) { addNewKey(&root); showInorderResult(root); }
+        if(mode == 1) addNewKey(&root);
         else if(mode == 3) queryKey(&root);
         else if(mode == 4) findNthKey(&root);
         else if(mode == 5) showInorderResult(root);
@@ -138,15 +138,16 @@ nptr NthKey(nptr root, int nth) {
 
 }
 
-void addNewKey(nptr* root) {
+void addNewKey(nptr* rptr) {
 
     int value;
 
     printf("Enter value: ");
     scanf("%d", &value);
     printf("\n");
-    insertNode(root, value);
+    insertNode(rptr, value);
     printf("\n");
+    showInorderResult(*rptr);
 
 }
 
