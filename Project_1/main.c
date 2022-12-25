@@ -12,15 +12,17 @@ typedef struct Node {
     struct Node *left, *right;
 } Node;
 
-Node* createNode();
+nptr newNode(int);
+
+nptr createBST();
 void insertNode(nptr*, int);
 void inorderTraversal(nptr);
 nptr searchNode(nptr, int);
 nptr NthKey(nptr, int);
 
 void addNewKey(nptr* );
-void queryKey(nptr* );
-void findNthKey(nptr* );
+void queryKey(nptr);
+void findNthKey(nptr);
 void showInorderResult(nptr);
 void showModesList();
 
@@ -29,7 +31,7 @@ int main(void) {
     FILE* fp;
     int mode = 0;
     char filename[50];
-    Node* root = createNode();
+    nptr root = createBST();
 
     printf("File name of BST keys value queue: ");
     scanf("%s", filename);
@@ -50,8 +52,8 @@ int main(void) {
         printf("\nSelect the mode: ");
         scanf("%d", &mode);
         if(mode == 1) addNewKey(&root);
-        else if(mode == 3) queryKey(&root);
-        else if(mode == 4) findNthKey(&root);
+        else if(mode == 3) queryKey(root);
+        else if(mode == 4) findNthKey(root);
         else if(mode == 5) showInorderResult(root);
     }
 
@@ -61,23 +63,35 @@ int main(void) {
 
 }
 
-Node* createNode() { return NULL; }
+nptr newNode(int value) {
+
+    nptr n = (nptr) malloc(sizeof(Node));
+
+    n->value = value, n->leftSize = 1;
+    n->left = NULL, n->right = NULL;
+
+    return n;
+
+}
+
+nptr createBST() { return NULL; }
 
 void insertNode(nptr* rptr, int value) {
 
-    nptr node = (nptr) malloc(sizeof(Node));
-    node->value = value, node->leftSize = 1;
-    node->left = NULL, node->right = NULL;
+    nptr node = newNode(value);
+    nptr addLeftSizeNodes[100];
+    int length = 0;
 
     if(!(*rptr)) (*rptr) = node;
     else {
         nptr* tmp = rptr;
         while(*tmp) {
-            if((*tmp)->value > value) { (*tmp)->leftSize++; tmp = &(*tmp)->left; }
+            if((*tmp)->value > value) { addLeftSizeNodes[length++] = *tmp; tmp = &(*tmp)->left; }
             else if((*tmp)->value < value) tmp = &(*tmp)->right;
             else { printf("WARNING: Failed to add data, duplicate value.\n"); return; }
         }
         (*tmp) = node;
+        for(int i = 0;i < length;i++) addLeftSizeNodes[i]->leftSize++;
         printf("INFO: Added %d successfully.\n", value);
     }
 
@@ -87,7 +101,7 @@ void inorderTraversal(nptr node) {
 
     if(node) {
         inorderTraversal(node->left);
-        printf("%d ", node->value);
+        printf("(%d %d) ", node->value, node->leftSize);
         inorderTraversal(node->right);
     }
 
@@ -151,19 +165,19 @@ void addNewKey(nptr* rptr) {
 
 }
 
-void queryKey(nptr* rptr) {
+void queryKey(nptr root) {
 
     int value;
 
     printf("Enter value: ");
     scanf("%d", &value);
 
-    if(searchNode(*rptr, value)) { printf("\nINFO: Find the key(%d).\n\n", value); showInorderResult(*rptr); }
+    if(searchNode(root, value)) { printf("\nINFO: Find the key(%d).\n\n", value); showInorderResult(root); }
     else printf("\nINFO: CAN'T find the key(%d).\n", value);
 
 }
 
-void findNthKey(nptr* rptr) {
+void findNthKey(nptr root) {
 
     int nth;
     nptr result;
@@ -171,7 +185,7 @@ void findNthKey(nptr* rptr) {
     printf("Enter nth: ");
     scanf("%d", &nth);
     
-    result = NthKey(*rptr, nth);
+    result = NthKey(root, nth);
     if(result) printf("\nINFO: %dth small key in BST is %d.\n", nth, result->value);
     else printf("\nERROR: CAN'T find %dth small key in BST.\n", nth);
 
