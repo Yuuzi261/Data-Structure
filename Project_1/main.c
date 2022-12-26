@@ -241,7 +241,6 @@ void findNthKey(nptr root) {
     
     count = 0;
     result = NthKey(root, nth);
-    printf("%d", count);
     if(result) printf("\nINFO: %dth small key in BST is %d.\n", nth, result->value);
     else printf("\nERROR: CAN'T find %dth small key in BST.\n", nth);
 
