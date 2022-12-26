@@ -5,10 +5,12 @@
 #define BOOL int
 #define TRUE 1
 #define FALSE 0
+#define LEFT 0
+#define RIGHT 1
 
 typedef struct Node* nptr;
 typedef struct Node {
-    int value, leftSize;
+    int value;
     struct Node *left, *right;
 } Node;
 
@@ -16,11 +18,13 @@ nptr newNode(int);
 
 nptr createBST();
 void insertNode(nptr*, int);
+BOOL deleteNode(nptr*, int);
 void inorderTraversal(nptr);
 nptr searchNode(nptr, int);
 nptr NthKey(nptr, int);
 
 void addNewKey(nptr* );
+void deleteKey(nptr* );
 void queryKey(nptr);
 void findNthKey(nptr);
 void showInorderResult(nptr);
@@ -52,6 +56,7 @@ int main(void) {
         printf("\nSelect the mode: ");
         scanf("%d", &mode);
         if(mode == 1) addNewKey(&root);
+        else if(mode == 2) deleteKey(&root);
         else if(mode == 3) queryKey(root);
         else if(mode == 4) findNthKey(root);
         else if(mode == 5) showInorderResult(root);
@@ -67,7 +72,7 @@ nptr newNode(int value) {
 
     nptr n = (nptr) malloc(sizeof(Node));
 
-    n->value = value, n->leftSize = 1;
+    n->value = value;
     n->left = NULL, n->right = NULL;
 
     return n;
@@ -79,21 +84,69 @@ nptr createBST() { return NULL; }
 void insertNode(nptr* rptr, int value) {
 
     nptr node = newNode(value);
-    nptr addLeftSizeNodes[100];
-    int length = 0;
 
     if(!(*rptr)) (*rptr) = node;
     else {
         nptr* tmp = rptr;
         while(*tmp) {
-            if((*tmp)->value > value) { addLeftSizeNodes[length++] = *tmp; tmp = &(*tmp)->left; }
+            if((*tmp)->value > value) { tmp = &(*tmp)->left; }
             else if((*tmp)->value < value) tmp = &(*tmp)->right;
             else { printf("WARNING: Failed to add data, duplicate value.\n"); return; }
         }
         (*tmp) = node;
-        for(int i = 0;i < length;i++) addLeftSizeNodes[i]->leftSize++;
         printf("INFO: Added %d successfully.\n", value);
     }
+
+}
+
+BOOL deleteNode(nptr* rptr, int value) {
+
+    int ddir, rdir = LEFT;
+    nptr deleNode = *rptr, replaceNode, deleNodeParent = NULL, replaceNodeParent = NULL;
+
+    while(deleNode) {
+        if(deleNode->value == value) break;
+        deleNodeParent = deleNode;
+        if(deleNode->value > value) { deleNode = deleNode->left; ddir = LEFT; }
+        else { deleNode = deleNode->right; ddir = RIGHT; }
+    }
+    if(!deleNode) return FALSE;
+
+    if(deleNode->left) { replaceNode = deleNode->left; replaceNodeParent = deleNode; }
+    else { replaceNode = deleNode; replaceNodeParent = deleNodeParent; }
+    while(replaceNode->right) { replaceNodeParent = replaceNode; replaceNode = replaceNode->right; rdir = RIGHT; }
+
+    if(!deleNode->left && !deleNode->right) {
+        if(!deleNodeParent) *rptr = NULL;
+        else if(ddir == LEFT) deleNodeParent->left = NULL;
+        else deleNodeParent->right = NULL;
+    }
+    else if(!deleNode->right) {
+        if(!deleNodeParent) *rptr = deleNode->left;
+        else if(ddir == LEFT) deleNodeParent->left = deleNode->left;
+        else deleNodeParent->right = deleNode->left;
+    }
+    else if(!deleNode->left) {
+        if(!deleNodeParent) *rptr = deleNode->right;
+        else if(ddir == LEFT) deleNodeParent->left = deleNode->right;
+        else deleNodeParent->right = deleNode->right;
+    }
+    else {
+        if(deleNode->left != replaceNode) replaceNode->left = deleNode->left;
+        if(deleNode->right != replaceNode) replaceNode->right = deleNode->right;
+        if(replaceNodeParent) {
+            if(rdir == LEFT) replaceNodeParent->left = NULL;
+            else replaceNodeParent->right = NULL;
+        }
+        if(deleNodeParent) {
+            if(ddir == LEFT) deleNodeParent->left = replaceNode;
+            else deleNodeParent->right = replaceNode;
+        }
+        else *rptr = replaceNode;
+    }
+
+    free(deleNode);
+    return TRUE;
 
 }
 
@@ -101,7 +154,7 @@ void inorderTraversal(nptr node) {
 
     if(node) {
         inorderTraversal(node->left);
-        printf("(%d %d) ", node->value, node->leftSize);
+        printf("%d ", node->value);
         inorderTraversal(node->right);
     }
 
@@ -129,26 +182,15 @@ nptr searchNode(nptr root, int value) {
 
 }
 
+int count;
 nptr NthKey(nptr root, int nth) {
 
-    BOOL isGoRight = FALSE;
-    int nowNth = root->leftSize;
-    
-    while(root) {
-        if(nowNth == nth) return root;
-        if(nowNth > nth) {
-            root = root->left;
-            if(isGoRight) nowNth -= root->leftSize;
-            else nowNth = root->leftSize;
-        }
-        else {
-            isGoRight = TRUE;
-            root = root->right;
-            if(root) nowNth += root->leftSize;
-            else break;
-        }
-    }
-    return NULL;
+    if(!root) return NULL;
+    nptr left = NthKey(root->left, nth);
+    if(left) return left;
+    count++;
+    if(count == nth) return root;
+    return NthKey(root->right, nth);
 
 }
 
@@ -161,6 +203,18 @@ void addNewKey(nptr* rptr) {
     printf("\n");
     insertNode(rptr, value);
     printf("\n");
+    showInorderResult(*rptr);
+
+}
+
+void deleteKey(nptr* rptr) {
+
+    int value;
+
+    printf("Enter value: ");
+    scanf("%d", &value);
+    if(deleteNode(rptr, value)) printf("\nINFO: Successfully deleted %d.\n\n", value);
+    else printf("\nERROR: CAN'T find %d in BST.\n\n", value);
     showInorderResult(*rptr);
 
 }
@@ -185,7 +239,9 @@ void findNthKey(nptr root) {
     printf("Enter nth: ");
     scanf("%d", &nth);
     
+    count = 0;
     result = NthKey(root, nth);
+    printf("%d", count);
     if(result) printf("\nINFO: %dth small key in BST is %d.\n", nth, result->value);
     else printf("\nERROR: CAN'T find %dth small key in BST.\n", nth);
 
